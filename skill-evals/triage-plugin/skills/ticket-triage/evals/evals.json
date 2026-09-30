@@ -1,0 +1,28 @@
+{
+  "skill_name": "ticket-triage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A customer just wrote to us: \"I want to cancel my subscription. Will I get money back for the rest of the month?\" Please triage it and draft the reply.",
+      "expected_output": "TRIAGE block, category billing, reply says cancel anytime and no prorated refund.",
+      "files": [],
+      "expectations": [
+        "The output is a TRIAGE block with category, priority and reply lines",
+        "category is billing",
+        "The reply states there is no partial or prorated refund for unused time",
+        "The reply does not promise any refund or credit"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Support ticket from a customer: \"Hi, do you ship to Canada? I need the order by Friday.\" Can you classify it and write the answer?",
+      "expected_output": "category shipping; says only EU, UK and Switzerland; no delivery promise.",
+      "files": [],
+      "expectations": [
+        "category is shipping",
+        "The reply says Canada is not a shipping destination",
+        "The reply does not promise delivery by Friday"
+      ]
+    }
+  ]
+}

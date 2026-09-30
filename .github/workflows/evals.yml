@@ -1,0 +1,72 @@
+# Tiered eval pipeline - the "test pyramid" for LLM features.
+#   PR tier      : fast, cheap, deterministic (fake backend + real app code paths)     ~1 min, $0
+#   PR tier (LLM): real model, deterministic graders + judge on the golden set        ~3 min, ~$0.10
+#   Nightly      : N trials, judge calibration, promptfoo v1-vs-candidate comparison  ~15 min
+name: evals
+on:
+  pull_request:
+    paths: ["app/**", "evals/**", "data/**"]
+  schedule: [{ cron: "0 3 * * *" }]
+  workflow_dispatch:
+
+jobs:
+  harness-smoke:            # proves harness + graders work; no tokens spent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: pytest evals/test_plain_pytest.py --junitxml=reports/junit.xml
+        env: { LLM_BACKEND: fake }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: smoke-reports, path: reports/ }
+
+  golden-set:               # real model on every PR that touches prompts/app
+    needs: harness-smoke
+    runs-on: ubuntu-latest
+    env:
+      LLM_BACKEND: openai                # or azure/bedrock endpoint inside your tenant
+      APP_MODEL: gpt-6-luna              # pin exact model versions in real projects
+      JUDGE_MODEL: gpt-6-luna
+      JUDGE_REASONING_EFFORT: medium
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GATE_DETERMINISTIC: "0.9"
+      GATE_JUDGE: "0.85"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: pytest evals/test_plain_pytest.py --junitxml=reports/junit.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: golden-reports, path: reports/ }
+
+  nightly:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      LLM_BACKEND: openai
+      APP_MODEL: gpt-6-luna
+      JUDGE_MODEL: gpt-6-luna
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PROMPTFOO_PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install -r requirements.txt && npm ci
+      - name: Judge still agrees with humans?
+        run: python scripts/calibrate_judge.py --split test
+      - name: Consistency (pass^k over 5 trials)
+        run: pytest evals/test_plain_pytest.py
+        env: { TRIALS: "5" }
+      - name: Side-by-side v1 vs candidate
+        run: npx promptfoo eval -c evals/promptfoo/promptfooconfig.yaml -o reports/promptfoo.html -o reports/promptfoo_results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: nightly-reports, path: reports/ }

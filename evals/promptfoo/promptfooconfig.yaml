@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Approach B - declarative eval config. Compares two versions of the WHOLE app side by side.
+#   npx promptfoo eval -c evals/promptfoo/promptfooconfig.yaml   (from repo root)
+#   npx promptfoo view                                          (local web UI)
+description: Support triage agent - v1 vs v2 prompt
+
+prompts:
+  - "{{ticket}}"            # the provider receives the raw ticket; the app builds its own prompts
+
+providers:
+  - id: file://provider.py
+    label: triage-v1
+    config: { version: v1 }
+  - id: file://provider.py
+    label: triage-v2 (friendlier prompt)
+    config: { version: v2 }
+
+tests: file://tests.py:generate_tests
+
+defaultTest:
+  assert:
+    - type: is-json                                  # built-in deterministic assertion
+    - type: javascript                               # inline JS assertion
+      value: JSON.parse(output).output.answer.length < 400
+      metric: brevity
+    - type: python                                   # shared graders (same as pytest)
+      value: file://asserts.py:deterministic
+      metric: deterministic
+    - type: python                                   # our calibrated LLM judge
+      value: file://asserts.py:grounded
+      metric: grounded
+
+evaluateOptions:
+  maxConcurrency: 4
+  cache: false

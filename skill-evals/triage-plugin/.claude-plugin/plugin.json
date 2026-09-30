@@ -1,0 +1,5 @@
+{
+  "name": "triage-plugin",
+  "version": "0.1.0",
+  "description": "Support-ticket triage skill used to demonstrate claude plugin eval."
+}

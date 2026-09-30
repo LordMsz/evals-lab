@@ -1,0 +1,10 @@
+.venv/
+node_modules/
+reports/
+__pycache__/
+.deepeval/
+mlruns.db
+mlruns/
+mlartifacts/
+.env
+.venv-*/

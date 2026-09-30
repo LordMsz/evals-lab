@@ -1,0 +1,627 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.281",
+  "startedAt": "2026-09-24T09:28:36.434Z",
+  "durationSeconds": 118,
+  "costUsd": 0.2903726,
+  "partial": false,
+  "suite": {
+    "root": "/home/claude/eval-lab/skill-evals/triage-plugin",
+    "ablation": "with-without",
+    "modelOverride": "haiku",
+    "judgeModel": "haiku",
+    "threshold": 1,
+    "concurrency": 1,
+    "plugins": [
+      {
+        "name": "triage-plugin",
+        "version": "0.1.0",
+        "path": "/home/claude/eval-lab/skill-evals/triage-plugin"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "canada-shipping",
+      "dir": "evals/canada-shipping",
+      "source": "prose",
+      "promptMarkdown": "Support ticket from a customer: \"Hi, do you ship to Canada? I need the order by Friday.\" Can you classify it and write the answer?",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 6,
+      "graders": [
+        {
+          "name": "criteria",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "PASS if the reply says we do not ship to Canada (only EU, UK and Switzerland) and does not promise any delivery date.\nFAIL if the reply says or implies shipping to Canada is possible, or promises delivery by Friday.",
+          "config": {
+            "criteria": "PASS if the reply says we do not ship to Canada (only EU, UK and Switzerland) and does not promise any delivery date.\nFAIL if the reply says or implies shipping to Canada is possible, or promises delivery by Friday.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "format",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "category:\\s*shipping",
+            "flags": "i",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ticket-triage\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.03952279999999999,
+            "judgeCostUsd": 0.000684,
+            "durationSeconds": 11,
+            "startedAt": "2026-09-24T09:28:36.458Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-1W7F3Z/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "```\nTRIAGE\ncategory: shipping\npriority: normal\nreply: Unfortunately, we only ship to the EU, UK, and Switzerland at this time, so we cannot ship to Canada. For reference, our standard shipping to these regions takes 3-5 business days. Please let us know if there's anything else we can help with.\n```"
+              },
+              {
+                "name": "format",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched category:\\s*shipping",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.0249495,
+            "judgeCostUsd": 0.0007350000000000001,
+            "durationSeconds": 11,
+            "startedAt": "2026-09-24T09:28:47.931Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-cVnTyd/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "```\nTRIAGE\ncategory: shipping\npriority: high\nreply: Unfortunately, we only ship to the EU, UK, and Switzerland at this time, so we're unable to deliver to Canada. We offer standard shipping (3-5 business days) and express shipping (1-2 business days) to our available regions. If you have an alternate shipping address in one of our supported countries, please let us know.\n```"
+              },
+              {
+                "name": "format",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched category:\\s*shipping",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 1,
+            "costUsd": 0.021711,
+            "judgeCostUsd": 0.001431,
+            "durationSeconds": 9,
+            "startedAt": "2026-09-24T09:28:58.660Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-6Ez60P/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I can help you classify and respond to this ticket.\n\n**Classification:**\n- **Category:** Shipping/Logistics + Time-Sensitive Inquiry\n- **Priority:** Medium-High (customer has a deadline)\n- **Tags:** Shipping availability, Expedited delivery, Geographic restrictions\n\n**Sample Response:**\n\n---\n\n**Subject:** Re: Shipping to Canada\n\nHi there,\n\nThank you for reaching out! I'm happy to help.\n\n**Yes, we do ship to Canada.** Standard shipping typically takes 5-7 business days, but since you need this by Friday, I want to make sure we can meet your deadline.\n\nTo assist you better, could you please provide:\n- Your postal code (to verify delivery timeframe)\n- Order details or what product you're interested in\n- What date is Friday for you (to confirm it's feasible)\n\nOnce I have this information, I can let you know if standard shipping will work or recommend our expedited options.\n\nLooking forward to helping you!\n\nBest regards,\n[Your Name]\nCustomer Support\n\n---\n\n**Key elements in this response:**\n✓ Answers the direct question immediately  \n✓ Acknowledges the time constraint  \n✓ Asks for clarifying information to give accurate shipping info  \n✓ Offers solutions (standard vs. expedited)  \n✓ Friendly and professional tone  \n\nWould you like me to adjust the response based on your actual shipping policies or company details?"
+              },
+              {
+                "name": "format",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 1,
+            "costUsd": 0.022362,
+            "judgeCostUsd": 0.001431,
+            "durationSeconds": 10,
+            "startedAt": "2026-09-24T09:29:07.232Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-jYip6C/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I'd be happy to help classify this ticket and draft a response. Here's my analysis:\n\n## Classification\n- **Category**: Shipping & Logistics\n- **Subcategory**: Pre-purchase inquiry (shipping availability)\n- **Priority**: Medium-High (time-sensitive - customer needs delivery by Friday)\n- **Type**: General inquiry + Urgency concern\n\n---\n\n## Suggested Response\n\n**Subject:** Re: Shipping to Canada\n\n---\n\nHi there,\n\nThank you for reaching out! I'd be happy to help.\n\n**Yes, we do ship to Canada.** However, since you need the order by Friday (Sept 26), I want to make sure we can meet that timeline. Given today is Thursday, that's a very tight window.\n\nA few questions to help me best assist you:\n\n1. **Which Canadian province/postal code?** (This affects delivery times)\n2. **Have you placed an order yet?** If so, what's your order number?\n3. **Would expedited shipping work for you?** We offer overnight/2-day options, though these carry additional fees.\n\nDepending on your location and current processing times, Friday delivery may or may not be possible. I want to be transparent about that before you commit.\n\nPlease reply with those details and I'll check our shipping options immediately.\n\nBest regards,  \n[Your Company] Customer Support\n\n---\n\n**Note**: Customize based on your actual shipping policies, processing times, and current order volume!"
+              },
+              {
+                "name": "format",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0,
+        "passRateWithout": 0,
+        "delta": 1
+      }
+    },
+    {
+      "name": "cancel-refund",
+      "dir": "evals/cancel-refund",
+      "source": "prose",
+      "promptMarkdown": "A customer just wrote to us: \"I want to cancel my subscription. Will I get money back for the rest of the month?\" Please triage it and draft the reply.",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 6,
+      "graders": [
+        {
+          "name": "criteria",
+          "type": "llm",
+          "weight": 2,
+          "graderMarkdown": "PASS if the drafted reply tells the customer they can cancel and makes clear there is no partial or prorated refund for the unused part of the month.\nFAIL if the reply promises or suggests any refund, credit or money back for unused time, or avoids answering the refund question.",
+          "config": {
+            "criteria": "PASS if the drafted reply tells the customer they can cancel and makes clear there is no partial or prorated refund for the unused part of the month.\nFAIL if the reply promises or suggests any refund, credit or money back for unused time, or avoids answering the refund question.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "format",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "TRIAGE\\s+category:\\s*billing\\s+priority:\\s*(low|normal|high|urgent)\\s+reply:",
+            "flags": "i",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ticket-triage\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.024024000000000004,
+            "judgeCostUsd": 0.0007439999999999999,
+            "durationSeconds": 9,
+            "startedAt": "2026-09-24T09:29:17.152Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-g5awFI/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "```\nTRIAGE\ncategory: billing\npriority: normal\nreply: You can cancel your subscription anytime in Settings > Billing, and it will be effective at the end of your current billing period. Unfortunately, ACME doesn't offer partial or prorated refunds for unused time in the remaining month. You'll continue to have full access until your billing period ends.\n```"
+              },
+              {
+                "name": "format",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched TRIAGE\\s+category:\\s*billing\\s+priority:\\s*(low|normal|high|urgent)\\s+reply:",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.025999300000000003,
+            "judgeCostUsd": 0.0007439999999999999,
+            "durationSeconds": 12,
+            "startedAt": "2026-09-24T09:29:25.887Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-7AYxvX/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": true,
+                "weight": 2,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "```\nTRIAGE\ncategory: billing\npriority: normal\nreply: You can cancel your subscription anytime in Settings > Billing, and it will take effect at the end of your current billing period. Unfortunately, we don't offer partial or prorated refunds for unused time within a billing period. You can proceed with cancellation whenever you're ready through your account settings.\n```"
+              },
+              {
+                "name": "format",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched TRIAGE\\s+category:\\s*billing\\s+priority:\\s*(low|normal|high|urgent)\\s+reply:",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 1,
+            "costUsd": 0.020821000000000003,
+            "judgeCostUsd": 0.001125000000000001,
+            "durationSeconds": 7,
+            "startedAt": "2026-09-24T09:29:38.223Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-stVvjR/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I'd be happy to help triage this and draft a reply, but I need some context first:\n\n1. **Subscription policy**: What's your cancellation and refund policy? (e.g., prorated refunds, non-refundable, specific conditions, etc.)\n2. **Product/service**: What are you selling? (SaaS, app subscription, membership, etc.)\n3. **Billing model**: How are subscriptions billed? (monthly, annual, per-use, etc.)\n4. **Any special circumstances**: Do you know anything about this customer's account (new, long-time, usage level)?\n\nOnce I understand your policy, I can:\n- **Triage**: Classify urgency/category (billing question, policy question, potential churn, etc.)\n- **Draft reply**: Give you a customer-friendly response that's honest, clear, and sets expectations\n\nWhat's your cancellation/refund policy?"
+              },
+              {
+                "name": "format",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 1,
+            "costUsd": 0.023218999999999997,
+            "judgeCostUsd": 0.0016290000000000002,
+            "durationSeconds": 11,
+            "startedAt": "2026-09-24T09:29:44.933Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-l280t6/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "criteria",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "I can help you triage and draft a response. To provide the most accurate reply, I need a bit more context:\n\n**Quick clarifications:**\n1. What's your company's cancellation and refund policy? (e.g., prorated refunds, full month only, no refunds, etc.)\n2. Do you have any info on when they joined/their payment cycle?\n3. Is this a high-value or long-term customer, or first-time request?\n\n**Quick triage:**\n- **Priority:** Medium-High (refund inquiry + churn risk)\n- **Category:** Billing/Retention\n- **Action:** Acknowledge → clarify policy → process if applicable → optional retention attempt\n\n**Template response** (generic — adjust based on your actual policy):\n\n---\n\n**Subject: Your Subscription Cancellation Request**\n\nHi [Customer Name],\n\nThanks for reaching out, and we're sorry to hear you'd like to cancel.\n\nRegarding your question about refunds: [**INSERT YOUR POLICY HERE** — e.g., \"We offer prorated refunds for the unused portion of your current billing cycle\" or \"Unfortunately, we don't offer refunds, but your subscription will remain active through the end of your paid period\"].\n\nHere's what happens next:\n- Your subscription will be canceled on [date/end of cycle]\n- You'll retain access until [date]\n- No further charges will apply after [date]\n\nIf there's anything we could improve or if you'd like to discuss your concerns, I'm here to help. We'd love to keep you as a customer if possible.\n\nBest regards,\n[Your name]\n\n---\n\n**What policy should I use for the draft?**"
+              },
+              {
+                "name": "format",
+                "passed": false,
+                "weight": 1,
+                "explanation": "pattern not found in last_message",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 0,
+        "passRateWithout": 0,
+        "delta": 1
+      }
+    },
+    {
+      "name": "no-trigger-coding",
+      "dir": "evals/no-trigger-coding",
+      "source": "prose",
+      "promptMarkdown": "Write a Python function that validates an email address with a regex and explain the edge cases it misses.",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 4,
+      "graders": [
+        {
+          "name": "answered",
+          "type": "regex",
+          "weight": 1,
+          "config": {
+            "target": "last_message",
+            "pattern": "def \\w+\\(",
+            "flags": "",
+            "match": "contains"
+          }
+        },
+        {
+          "name": "not-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?ticket-triage\"",
+            "min": 0,
+            "max": 0,
+            "arm": "both"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.022387999999999998,
+            "judgeCostUsd": 0,
+            "durationSeconds": 9,
+            "startedAt": "2026-09-24T09:29:55.840Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-XmLWD8/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "answered",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched def \\w+\\(",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.021753,
+            "judgeCostUsd": 0,
+            "durationSeconds": 9,
+            "startedAt": "2026-09-24T09:30:05.220Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-m4qQUO/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "answered",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched def \\w+\\(",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.022022,
+            "judgeCostUsd": 0,
+            "durationSeconds": 10,
+            "startedAt": "2026-09-24T09:30:14.371Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-Ob4z8q/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "answered",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched def \\w+\\(",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.021601,
+            "judgeCostUsd": 0,
+            "durationSeconds": 10,
+            "startedAt": "2026-09-24T09:30:24.669Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-1qHE26/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "answered",
+                "passed": true,
+                "weight": 1,
+                "explanation": "matched def \\w+\\(",
+                "withOnly": false,
+                "scored": true
+              },
+              {
+                "name": "not-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 0..0)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 3,
+    "casesPassed": 3,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0.6666666666666666
+  }
+}

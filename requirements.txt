@@ -1,0 +1,7 @@
+pytest>=9
+deepeval>=4.2
+inspect-ai>=0.3.268
+anthropic
+openai
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
