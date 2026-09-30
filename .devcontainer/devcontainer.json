@@ -1,0 +1,50 @@
+// Dev container: Python 3.12 + Node 22 + Docker CLI + Claude Code. Nothing to install on the host except Docker.
+// Optional platforms (Phoenix, Langfuse, Ollama) live in infra/compose.yaml and are started on demand with
+// `make up-phoenix` / `make up-langfuse` / `make up-ollama` from inside this container (see README).
+{
+  "name": "eval-lab",
+  "dockerComposeFile": "compose.yaml",
+  "service": "dev",
+  "runServices": ["dev"],
+  "workspaceFolder": "/workspaces/eval-lab",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "vscode",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    // Talks to the host's Docker engine, so platform containers run as siblings, not nested.
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    // `claude` CLI for `make plugin-eval`; log in once, the login is kept in a volume.
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // UIs served from inside this container. Platform UIs (Phoenix :6006, Langfuse :3000, ...) are
+  // published directly by infra/compose.yaml.
+  "forwardPorts": [15500, 7575, 5000],
+  "portsAttributes": {
+    "15500": { "label": "promptfoo view" },
+    "7575": { "label": "inspect view" },
+    "5000": { "label": "mlflow ui" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ukgovernmentbeis.inspect-ai",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-containers",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/eval-lab/.venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["evals"],
+        "python.envFile": "${workspaceFolder}/.env"
+      }
+    }
+  }
+}

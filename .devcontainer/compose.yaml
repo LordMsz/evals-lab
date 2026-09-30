@@ -1,0 +1,32 @@
+# The dev container itself. Shares the compose project "eval-lab" (and so its network) with
+# infra/compose.yaml, which is how the dev container reaches phoenix:6006, langfuse-web:3000, ollama:11434.
+name: eval-lab
+
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/python:3.12-bookworm
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/eval-lab:cached
+      # Keep dependency trees off the host bind mount (much faster on Windows/macOS, and no
+      # Linux binaries leaking into the host checkout).
+      - venv:/workspaces/eval-lab/.venv
+      - node-modules:/workspaces/eval-lab/node_modules
+      - claude-config:/home/vscode/.claude
+    environment:
+      PYTHONPATH: /workspaces/eval-lab
+      LANG: en_US.UTF-8
+      CLAUDE_CONFIG_DIR: /home/vscode/.claude
+      # Platform endpoints as seen from inside the dev container (only used once you start them).
+      PHOENIX_URL: http://phoenix:6006
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      LANGFUSE_HOST: http://langfuse-web:3000
+      LANGFUSE_PUBLIC_KEY: pk-lf-local-dev      # pre-provisioned by infra/compose.yaml, local only
+      LANGFUSE_SECRET_KEY: sk-lf-local-dev
+      # infra/compose.yaml uses the same project name; don't warn about "orphan" dev container.
+      COMPOSE_IGNORE_ORPHANS: "true"
+
+volumes:
+  venv:
+  node-modules:
+  claude-config:

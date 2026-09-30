@@ -1,0 +1,4 @@
+# Files are executed inside Linux containers; keep LF even on a Windows checkout (core.autocrlf=true).
+* text=auto eol=lf
+*.png binary
+*.jpg binary

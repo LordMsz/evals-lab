@@ -32,7 +32,19 @@ all: pytest promptfoo deepeval inspect calibrate online
 # --- platform & vendor evals (optional; see README) ---
 phoenix-exp:   ; $(PY) evals/platforms/phoenix_experiment.py
 langfuse-exp:  ; $(PY) evals/platforms/langfuse_experiment.py
+mlflow-exp:    ; $(PY) evals/platforms/mlflow_eval.py
+mlflow-ui:     ; $(BIN)/mlflow ui --backend-store-uri sqlite:///mlruns.db
 braintrust:    ; $(BIN)/braintrust eval evals/platforms/eval_braintrust.py --no-send-logs
 langsmith:     ; LANGSMITH_TEST_TRACKING=false $(BIN)/pytest evals/platforms/langsmith_suite.py
 openai-evals:  ; $(PY) evals/platforms/openai_evals_api.py --mode byo
 plugin-eval:   ; cd skill-evals/triage-plugin && claude plugin eval . --trust-plugin --runs 2 --model haiku --judge-model haiku --max-cost-usd 2 --no-publish
+
+# --- self-hosted platforms in Docker (infra/compose.yaml; works from the dev container) ---
+COMPOSE := docker compose -f infra/compose.yaml
+OLLAMA_MODEL ?= qwen2.5:7b
+up-phoenix:    ; $(COMPOSE) --profile phoenix up -d
+up-langfuse:   ; $(COMPOSE) --profile langfuse up -d --wait
+up-ollama:     ; $(COMPOSE) --profile ollama up -d && $(COMPOSE) exec ollama ollama pull $(OLLAMA_MODEL)
+platforms-ps:  ; $(COMPOSE) --profile '*' ps
+platforms-down:; $(COMPOSE) --profile '*' rm --stop --force
+.PHONY: up-phoenix up-langfuse up-ollama platforms-ps platforms-down

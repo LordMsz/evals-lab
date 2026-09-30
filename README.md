@@ -3,16 +3,31 @@
 One small LLM app, one golden dataset, evaluated by several tools. The graders
 (`evals/checks.py`, `evals/judge.py`) and the data (`data/*.jsonl`) are shared. Each tool is a thin adapter around them.
 
-Requirements: Linux/macOS/WSL, Python 3.11+, Node 20+ (for promptfoo only). No Docker needed.
+Requirements, pick one:
+- **Dev container (recommended):** Docker + VS Code with the Dev Containers extension. Nothing else on the host.
+- **Local:** Linux/macOS/WSL, Python 3.11+, Node 20+ (for promptfoo only).
 
 ---
 
 ## 1. Setup (once)
 
+**Dev container:** open the folder in VS Code → *Reopen in Container*. The first build creates
+`.venv` and `node_modules` (both live in Docker volumes, not in your checkout) and installs
+Python 3.12, Node 22, the Docker CLI and the `claude` CLI. Then:
+
+```bash
+cp .env.example .env              # optional: only for real models; put your key in .env
+```
+
+**Local:**
 ```bash
 make setup                        # .venv + requirements.txt + npm install (promptfoo)
 cp .env.example .env              # then put your key in .env (never commit it)
 ```
+
+Windows tip: a checkout on a Windows drive is bind-mounted into the container, which is slow for
+file-heavy work. For speed, use *Dev Containers: Clone Repository in Container Volume* or keep the
+repo in the WSL filesystem.
 
 `.env` is loaded automatically by `make`. Without a key, everything runs on the offline **fake** backend (free, deterministic, used for testing the harness only).
 
@@ -45,6 +60,40 @@ make pytest    LLM_BACKEND=openai TRIALS=3
 ```
 
 ## 3. Platforms, self-hosted locally (optional)
+
+### In Docker (dev container or any shell with Docker)
+
+`infra/compose.yaml` holds each platform as a compose profile. The dev container talks to the
+host's Docker engine, so these run as sibling containers on the same network. Nothing starts until
+you ask for it.
+
+| Command | Starts | UI (host browser) | From the dev container |
+|---|---|---|---|
+| `make up-phoenix` | Phoenix (SQLite) | http://localhost:6006 | `http://phoenix:6006` |
+| `make up-langfuse` | Langfuse web + worker, Postgres, ClickHouse, Redis, MinIO | http://localhost:3000 (`admin@eval-lab.test` / `eval-lab-local`) | `http://langfuse-web:3000` |
+| `make up-ollama` | Ollama + pulls `OLLAMA_MODEL` (default `qwen2.5:7b`) | – | `http://ollama:11434` |
+| `make platforms-ps` / `make platforms-down` | status / stop and remove (data volumes are kept) | | |
+
+The dev container already has `PHOENIX_URL`, `LANGFUSE_HOST`/keys and `OLLAMA_BASE_URL` pointing at
+these services. The Langfuse project and its API keys are created on first start. Then:
+
+```bash
+make up-phoenix  && .venv/bin/pip install arize-phoenix-client && make phoenix-exp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://phoenix:6006 make online                       # traces → Phoenix
+
+make up-langfuse && .venv/bin/pip install "langfuse>=3" && make langfuse-exp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://langfuse-web:3000/api/public/otel \
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic%20$(printf pk-lf-local-dev:sk-lf-local-dev | base64)" \
+  make online                                                                      # traces → Langfuse
+
+make up-ollama   && make pytest LLM_BACKEND=ollama
+
+.venv/bin/pip install "mlflow>=3.16" && make mlflow-exp && make mlflow-ui           # UI on :5000, forwarded
+```
+
+If the platform SDKs clash with `requirements.txt`, use a separate venv as shown below.
+
+### Without Docker
 
 Use a separate venv per platform. Their dependency trees are large and can clash.
 
@@ -88,6 +137,8 @@ app/            system under test: triage.py (RAG + tool + 2 LLM calls), llm.py 
 data/           cases.jsonl (golden set), judge_labels.jsonl (human labels for calibration)
 evals/          checks.py + judge.py (the graders), one adapter per harness, platforms/
 scripts/        calibrate_judge.py, online_eval.py, inspect_gate.py
+.devcontainer/  dev container (Python + Node + Docker CLI), see §1
+infra/          compose profiles for self-hosted platforms (Phoenix, Langfuse, Ollama), see §3
 .github/        tiered CI example (PR smoke → golden set → nightly)
 ```
 
